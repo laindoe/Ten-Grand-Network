@@ -248,6 +248,39 @@ const relationships = [
 ];
 
 // ==================
+// NODE LAYOUT (offsets from center)
+// ==================
+
+const nodeLayout = {
+  tengrand:      { dx: 0,    dy: 0    },
+  laindoe:       { dx: 0,    dy: -175 },
+  ahch:          { dx: -138, dy: -95  },
+  bravo:         { dx: 138,  dy: -120 },
+  housewolf:     { dx: -138, dy: 105  },
+  expressitup:   { dx: 138,  dy: 93   },
+  grandureorbit: { dx: 0,    dy: 185  },
+};
+
+function computeNodePositions() {
+  const container = document.getElementById('graphContainer');
+  const w = container.clientWidth || 390;
+  const h = container.clientHeight || 700;
+  const svg = document.getElementById('graphSvg');
+
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  // Shift Ten Grand slightly above geometric center to balance the labels below each node
+  const cx = w / 2;
+  const cy = h / 2 - 15;
+
+  nodes.forEach(node => {
+    const off = nodeLayout[node.id];
+    node.cx = Math.round(cx + off.dx);
+    node.cy = Math.round(cy + off.dy);
+  });
+}
+
+// ==================
 // STARS BACKGROUND
 // ==================
 
@@ -922,10 +955,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Stars
   initStars();
 
-  // Graph
+  // Graph — compute positions so Ten Grand is at visual center, then render
+  computeNodePositions();
   renderGraph();
   applyTransform();
   initGraphInteractions();
+
+  // Re-center on resize (orientation change, etc.)
+  window.addEventListener('resize', () => {
+    computeNodePositions();
+    renderGraph();
+    applyTransform();
+  });
 
   // Drawer
   document.getElementById('menuBtn').addEventListener('click', openDrawer);
