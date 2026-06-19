@@ -223,7 +223,7 @@ const relationships = [
     projectsTogether: 4,
     mutualConnections: 17,
     strength: 'weak',
-    notes: 'Bravo produced A House Called Hue's 2021 lookbook campaign.',
+    notes: 'Bravo produced A House Called Hue’s 2021 lookbook campaign.',
   },
   {
     source: 'housewolf',
@@ -233,7 +233,7 @@ const relationships = [
     projectsTogether: 11,
     mutualConnections: 12,
     strength: 'medium',
-    notes: 'Express It Up is House of Wolf's go-to production partner for apparel runs.',
+    notes: 'Express It Up is House of Wolf’s go-to production partner for apparel runs.',
   },
   {
     source: 'expressitup',
@@ -269,7 +269,6 @@ function computeNodePositions() {
 
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
-  // Shift Ten Grand slightly above geometric center to balance the labels below each node
   const cx = w / 2;
   const cy = h / 2 - 15;
 
@@ -385,7 +384,6 @@ function applyTransform() {
   const t = `translate(${panX} ${panY}) scale(${currentZoom})`;
   g.setAttribute('transform', t);
   lg.setAttribute('transform', t);
-  document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
 }
 
 function renderGraph() {
@@ -393,10 +391,6 @@ function renderGraph() {
   const nodesGroup = document.getElementById('nodesGroup');
   linesGroup.innerHTML = '';
   nodesGroup.innerHTML = '';
-
-  // SVG viewbox center offset for scaling
-  const originX = 195;
-  const originY = 295;
 
   // Draw lines
   relationships.forEach(rel => {
@@ -961,7 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTransform();
   initGraphInteractions();
 
-  // Re-center on resize (orientation change, etc.)
   window.addEventListener('resize', () => {
     computeNodePositions();
     renderGraph();
@@ -983,10 +976,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Zoom controls
-  document.getElementById('zoomIn').addEventListener('click', () => setZoom(currentZoom * 1.2));
-  document.getElementById('zoomOut').addEventListener('click', () => setZoom(currentZoom / 1.2));
-  document.getElementById('zoomCenter').addEventListener('click', centerGraph);
+  // Graph search button (switches to search tab)
+  document.getElementById('graphSearchBtn').addEventListener('click', () => switchTab('search'));
 
   // Notification button (placeholder tap)
   document.getElementById('notifBtn').addEventListener('click', () => {
