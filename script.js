@@ -384,7 +384,6 @@ function applyTransform() {
   const t = `translate(${panX} ${panY}) scale(${currentZoom})`;
   g.setAttribute('transform', t);
   lg.setAttribute('transform', t);
-  document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
 }
 
 function renderGraph() {
