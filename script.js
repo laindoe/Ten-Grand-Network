@@ -223,7 +223,7 @@ const relationships = [
     projectsTogether: 4,
     mutualConnections: 17,
     strength: 'weak',
-    notes: 'Bravo produced A House Called Hue's 2021 lookbook campaign.',
+    notes: 'Bravo produced A House Called Hue’s 2021 lookbook campaign.',
   },
   {
     source: 'housewolf',
@@ -233,7 +233,7 @@ const relationships = [
     projectsTogether: 11,
     mutualConnections: 12,
     strength: 'medium',
-    notes: 'Express It Up is House of Wolf's go-to production partner for apparel runs.',
+    notes: 'Express It Up is House of Wolf’s go-to production partner for apparel runs.',
   },
   {
     source: 'expressitup',
@@ -248,104 +248,7 @@ const relationships = [
 ];
 
 // ==================
-// NODE LAYOUT (offsets from center)
-// ==================
-
-const nodeLayout = {
-  tengrand:      { dx: 0,    dy: 0    },
-  laindoe:       { dx: 0,    dy: -175 },
-  ahch:          { dx: -138, dy: -95  },
-  bravo:         { dx: 138,  dy: -120 },
-  housewolf:     { dx: -138, dy: 105  },
-  expressitup:   { dx: 138,  dy: 93   },
-  grandureorbit: { dx: 0,    dy: 185  },
-};
-
-function computeNodePositions() {
-  const container = document.getElementById('graphContainer');
-  const w = container.clientWidth || 390;
-  const h = container.clientHeight || 700;
-  const svg = document.getElementById('graphSvg');
-
-  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-
-  const cx = w / 2;
-  const cy = h / 2 - 15;
-
-  nodes.forEach(node => {
-    const off = nodeLayout[node.id];
-    node.cx = Math.round(cx + off.dx);
-    node.cy = Math.round(cy + off.dy);
-  });
-}
-
-// ==================
-// STARS BACKGROUND
-// ==================
-
-function initStars() {
-  const canvas = document.getElementById('starsCanvas');
-  const ctx = canvas.getContext('2d');
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    drawStars();
-  }
-
-  function drawStars() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Deep space gradient background
-    const bg = ctx.createRadialGradient(
-      canvas.width * 0.4, canvas.height * 0.3, 0,
-      canvas.width * 0.5, canvas.height * 0.5, canvas.width
-    );
-    bg.addColorStop(0, '#0a1128');
-    bg.addColorStop(0.5, '#06091a');
-    bg.addColorStop(1, '#030508');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Stars
-    const starCount = 180;
-    for (let i = 0; i < starCount; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const r = Math.random() * 1.2;
-      const opacity = 0.1 + Math.random() * 0.6;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200,220,255,${opacity})`;
-      ctx.fill();
-    }
-
-    // A few brighter stars
-    for (let i = 0; i < 12; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const r = 1.5 + Math.random() * 0.8;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,0.7)`;
-      ctx.fill();
-      // Glow
-      const grd = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
-      grd.addColorStop(0, 'rgba(200,220,255,0.15)');
-      grd.addColorStop(1, 'rgba(200,220,255,0)');
-      ctx.beginPath();
-      ctx.arc(x, y, r * 5, 0, Math.PI * 2);
-      ctx.fillStyle = grd;
-      ctx.fill();
-    }
-  }
-
-  resize();
-  window.addEventListener('resize', resize);
-}
-
-// ==================
-// GRAPH RENDERING
+// HELPERS
 // ==================
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -375,177 +278,284 @@ function lineStyle(strength) {
   }
 }
 
+function hexToRgb(hex) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : null;
+}
+
+function nodeGradCSS(node) {
+  const map = {
+    'url(#grad-gold)':   'linear-gradient(135deg, #ffe066, #f5a623)',
+    'url(#grad-blue)':   'linear-gradient(135deg, #7eb8ff, #4f8ef7)',
+    'url(#grad-purple)': 'linear-gradient(135deg, #c77dff, #a259ff)',
+    'url(#grad-green)':  'linear-gradient(135deg, #6effc2, #22d67f)',
+    'url(#grad-white)':  'linear-gradient(135deg, #ffffff, #c8d8f0)',
+    'url(#grad-cyan)':   'linear-gradient(135deg, #7fffff, #00c8c8)',
+  };
+  return map[node.grad] || node.color;
+}
+
+// ==================
+// STARS BACKGROUND
+// ==================
+
+function initStars() {
+  const canvas = document.getElementById('starsCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drawStars();
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const bg = ctx.createRadialGradient(
+      canvas.width * 0.4, canvas.height * 0.3, 0,
+      canvas.width * 0.5, canvas.height * 0.5, canvas.width
+    );
+    bg.addColorStop(0, '#0a1128');
+    bg.addColorStop(0.5, '#06091a');
+    bg.addColorStop(1, '#030508');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < 180; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const r = Math.random() * 1.2;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,220,255,${0.1 + Math.random() * 0.6})`;
+      ctx.fill();
+    }
+
+    for (let i = 0; i < 12; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const r = 1.5 + Math.random() * 0.8;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fill();
+      const grd = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+      grd.addColorStop(0, 'rgba(200,220,255,0.15)');
+      grd.addColorStop(1, 'rgba(200,220,255,0)');
+      ctx.beginPath();
+      ctx.arc(x, y, r * 5, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+    }
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+}
+
+// ==================
+// PAN / ZOOM STATE
+// ==================
+
 let currentZoom = 1;
 let panX = 0, panY = 0;
 
 function applyTransform() {
-  const g = document.getElementById('nodesGroup');
-  const lg = document.getElementById('connectionLines');
   const t = `translate(${panX} ${panY}) scale(${currentZoom})`;
-  g.setAttribute('transform', t);
-  lg.setAttribute('transform', t);
+  document.getElementById('nodesGroup').setAttribute('transform', t);
+  document.getElementById('connectionLines').setAttribute('transform', t);
 }
 
-function renderGraph() {
+function setZoom(z) {
+  currentZoom = Math.max(0.4, Math.min(3, z));
+  applyTransform();
+}
+
+// ==================
+// D3 FORCE GRAPH
+// ==================
+
+let simulation = null;
+let floatTimer = null;
+
+// Starting positions relative to center — simulation begins here then settles
+const nodeLayout = {
+  tengrand:      { dx: 0,    dy: 0    },
+  laindoe:       { dx: 0,    dy: -175 },
+  ahch:          { dx: -138, dy: -95  },
+  bravo:         { dx: 138,  dy: -120 },
+  housewolf:     { dx: -138, dy: 105  },
+  expressitup:   { dx: 138,  dy: 93   },
+  grandureorbit: { dx: 0,    dy: 185  },
+};
+
+function initD3Graph() {
+  if (simulation) simulation.stop();
+  if (floatTimer) clearInterval(floatTimer);
+
+  const container = document.getElementById('graphContainer');
+  const w = container.clientWidth || 390;
+  const h = container.clientHeight || 700;
+  const svg = document.getElementById('graphSvg');
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  const cx = w / 2;
+  const cy = h / 2 - 15;
+
+  // Seed node positions near their layout offsets so the initial animation is a gentle settle
+  nodes.forEach(n => {
+    const off = nodeLayout[n.id];
+    n.x = cx + off.dx + (Math.random() - 0.5) * 6;
+    n.y = cy + off.dy + (Math.random() - 0.5) * 6;
+    n.fx = undefined;
+    n.fy = undefined;
+    n.vx = 0;
+    n.vy = 0;
+  });
+
+  // Ten Grand stays pinned at center
+  const center = nodes.find(n => n.id === 'tengrand');
+  center.fx = cx;
+  center.fy = cy;
+
+  // D3-format links that reference our original relationship objects
+  const links = relationships.map(r => ({
+    source: r.source,
+    target: r.target,
+    strength: r.strength,
+    rel: r,
+  }));
+
+  // Build SVG elements once; update positions every simulation tick
   const linesGroup = document.getElementById('connectionLines');
   const nodesGroup = document.getElementById('nodesGroup');
   linesGroup.innerHTML = '';
   nodesGroup.innerHTML = '';
 
-  // SVG viewbox center offset for scaling
-  const originX = 195;
-  const originY = 295;
+  // Line element references keyed by "source-target"
+  const lineElMap = {};
+  links.forEach(link => {
+    const key = `${link.source}-${link.target}`;
+    const style = lineStyle(link.strength);
 
-  // Draw lines
-  relationships.forEach(rel => {
-    const src = getNodeById(rel.source);
-    const tgt = getNodeById(rel.target);
-    if (!src || !tgt) return;
-
-    const style = lineStyle(rel.strength);
-
-    // Glow line (fat, blurred)
     const glowLine = el('line', {
-      x1: src.cx, y1: src.cy,
-      x2: tgt.cx, y2: tgt.cy,
       stroke: style.stroke,
-      'stroke-width': parseFloat(style.strokeWidth) * 4,
+      'stroke-width': String(parseFloat(style.strokeWidth) * 4),
       'stroke-opacity': '0.12',
       'stroke-linecap': 'round',
       filter: 'url(#glow-line)',
     });
     if (style.dasharray) glowLine.setAttribute('stroke-dasharray', style.dasharray);
 
-    // Main line
-    const line = el('line', {
-      x1: src.cx, y1: src.cy,
-      x2: tgt.cx, y2: tgt.cy,
+    const mainLine = el('line', {
       stroke: style.stroke,
       'stroke-width': style.strokeWidth,
       'stroke-opacity': '0.7',
       'stroke-linecap': 'round',
     });
-    if (style.dasharray) line.setAttribute('stroke-dasharray', style.dasharray);
+    if (style.dasharray) mainLine.setAttribute('stroke-dasharray', style.dasharray);
 
-    // Hit area (invisible wide line for tapping)
-    const hit = el('line', {
-      x1: src.cx, y1: src.cy,
-      x2: tgt.cx, y2: tgt.cy,
+    // Wide invisible hit area for easy tapping
+    const hitLine = el('line', {
       stroke: 'transparent',
-      'stroke-width': '20',
+      'stroke-width': '24',
     });
-    hit.style.cursor = 'pointer';
-    hit.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openRelSheet(rel);
-    });
+    hitLine.style.cursor = 'pointer';
+    hitLine.addEventListener('click', e => { e.stopPropagation(); openRelSheet(link.rel); });
 
     linesGroup.appendChild(glowLine);
-    linesGroup.appendChild(line);
-    linesGroup.appendChild(hit);
+    linesGroup.appendChild(mainLine);
+    linesGroup.appendChild(hitLine);
+    lineElMap[key] = { glowLine, mainLine, hitLine };
   });
 
-  // Draw nodes
+  // Node group elements — children use local coords (cx=0, cy=0) so D3 only needs to update the group transform
+  const nodeGroupMap = {};
+
   nodes.forEach(node => {
     const g = el('g', { class: 'node-group' });
     g.style.cursor = 'pointer';
 
     if (node.isCenter) {
-      // Outer ring orbit animation
       const orbitR = node.radius + 14;
-      const orbit = el('circle', {
-        cx: node.cx, cy: node.cy,
-        r: orbitR,
+      g.appendChild(el('circle', {
+        cx: 0, cy: 0, r: orbitR,
         fill: 'none',
         stroke: 'url(#ring-gold)',
         'stroke-width': '1',
         'stroke-opacity': '0.5',
         'stroke-dasharray': `${orbitR * 0.4} ${orbitR * 0.2}`,
-      });
-      g.appendChild(orbit);
+      }));
 
-      // Outer glow pulse
-      const pulse = el('circle', {
-        cx: node.cx, cy: node.cy,
-        r: node.radius + 6,
+      g.appendChild(el('circle', {
+        cx: 0, cy: 0, r: node.radius + 6,
         fill: 'none',
         stroke: node.color,
         'stroke-width': '1.5',
         'stroke-opacity': '0.25',
-      });
+      }));
 
-      // Animated pulsing ring
       const animCircle = el('circle', {
-        cx: node.cx, cy: node.cy,
-        r: node.radius + 2,
+        cx: 0, cy: 0, r: node.radius + 2,
         fill: 'none',
         stroke: node.color,
         'stroke-width': '1',
         'stroke-opacity': '0',
       });
-      const anim = document.createElementNS(SVG_NS, 'animate');
-      anim.setAttribute('attributeName', 'r');
-      anim.setAttribute('values', `${node.radius + 2};${node.radius + 22}`);
-      anim.setAttribute('dur', '2.5s');
-      anim.setAttribute('repeatCount', 'indefinite');
+      const animR = document.createElementNS(SVG_NS, 'animate');
+      animR.setAttribute('attributeName', 'r');
+      animR.setAttribute('values', `${node.radius + 2};${node.radius + 22}`);
+      animR.setAttribute('dur', '2.5s');
+      animR.setAttribute('repeatCount', 'indefinite');
       const animOp = document.createElementNS(SVG_NS, 'animate');
       animOp.setAttribute('attributeName', 'stroke-opacity');
       animOp.setAttribute('values', '0.4;0');
       animOp.setAttribute('dur', '2.5s');
       animOp.setAttribute('repeatCount', 'indefinite');
-      animCircle.appendChild(anim);
+      animCircle.appendChild(animR);
       animCircle.appendChild(animOp);
-
-      g.appendChild(pulse);
       g.appendChild(animCircle);
     } else {
-      // Outer ring for supporting nodes
-      const ring = el('circle', {
-        cx: node.cx, cy: node.cy,
-        r: node.radius + 4,
+      g.appendChild(el('circle', {
+        cx: 0, cy: 0, r: node.radius + 4,
         fill: 'none',
         stroke: node.color,
         'stroke-width': '0.8',
         'stroke-opacity': '0.3',
         'stroke-dasharray': '3,4',
-      });
-      g.appendChild(ring);
+      }));
     }
 
-    // Node background glow
-    const glowCircle = el('circle', {
-      cx: node.cx, cy: node.cy,
-      r: node.radius + 3,
+    // Ambient glow halo
+    g.appendChild(el('circle', {
+      cx: 0, cy: 0, r: node.radius + 3,
       fill: node.color,
       'fill-opacity': '0.08',
       filter: 'url(#glow-gold)',
-    });
-    g.appendChild(glowCircle);
+    }));
 
-    // Main circle
-    const circle = el('circle', {
-      cx: node.cx, cy: node.cy,
-      r: node.radius,
+    // Main filled circle
+    g.appendChild(el('circle', {
+      cx: 0, cy: 0, r: node.radius,
       fill: node.grad,
       filter: node.filter,
       class: 'node-circle',
-    });
-    g.appendChild(circle);
+    }));
 
-    // Inner highlight
-    const highlight = el('circle', {
-      cx: node.cx - node.radius * 0.25,
-      cy: node.cy - node.radius * 0.3,
+    // Specular highlight
+    g.appendChild(el('circle', {
+      cx: -node.radius * 0.25,
+      cy: -node.radius * 0.3,
       r: node.radius * 0.35,
       fill: 'white',
       'fill-opacity': '0.12',
-    });
-    g.appendChild(highlight);
+    }));
 
-    // Initials/label text
+    // Label text
     if (node.isCenter) {
       const t1 = el('text', {
-        x: node.cx, y: node.cy - 6,
+        x: 0, y: -6,
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
         fill: '#fff',
@@ -556,7 +566,7 @@ function renderGraph() {
       });
       t1.textContent = '10';
       const t2 = el('text', {
-        x: node.cx, y: node.cy + 10,
+        x: 0, y: 10,
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
         fill: 'rgba(255,255,255,0.8)',
@@ -570,7 +580,7 @@ function renderGraph() {
       g.appendChild(t2);
     } else {
       const t = el('text', {
-        x: node.cx, y: node.cy,
+        x: 0, y: 0,
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
         fill: 'white',
@@ -582,40 +592,25 @@ function renderGraph() {
       g.appendChild(t);
     }
 
-    // Name label below node
-    const nameOffset = node.radius + 14;
-    const nameFontSize = node.isCenter ? '11' : '9.5';
-
-    const nameBg = el('rect', {
-      x: node.cx - 44,
-      y: node.cy + nameOffset - 1,
-      width: '88',
-      height: node.isCenter ? '28' : '24',
-      rx: '6',
-      fill: 'rgba(6,10,20,0.7)',
-      'fill-opacity': '0.0',
-    });
-    g.appendChild(nameBg);
+    // Name / category labels below node
+    const nameOff = node.radius + 14;
 
     const nameText = el('text', {
-      x: node.cx,
-      y: node.cy + nameOffset + (node.isCenter ? 6 : 5),
+      x: 0, y: nameOff + (node.isCenter ? 6 : 5),
       'text-anchor': 'middle',
       fill: node.isCenter ? node.color : '#e8eeff',
-      'font-size': nameFontSize,
+      'font-size': node.isCenter ? '11' : '9.5',
       'font-weight': node.isCenter ? '700' : '600',
       'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
-      'letter-spacing': node.isCenter ? '0.05' : '0.02',
     });
     nameText.textContent = node.isCenter ? 'TEN GRAND' : node.name;
     g.appendChild(nameText);
 
     const catText = el('text', {
-      x: node.cx,
-      y: node.cy + nameOffset + (node.isCenter ? 19 : 17),
+      x: 0, y: nameOff + (node.isCenter ? 19 : 17),
       'text-anchor': 'middle',
       fill: node.isCenter ? 'rgba(255,200,50,0.6)' : 'rgba(180,195,230,0.45)',
-      'font-size': node.isCenter ? '8' : '8',
+      'font-size': '8',
       'font-weight': '500',
       'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
       'letter-spacing': '0.1',
@@ -623,20 +618,18 @@ function renderGraph() {
     catText.textContent = node.category.toUpperCase();
     g.appendChild(catText);
 
-    // Connection count badge (small pill below category for non-center nodes)
     if (!node.isCenter) {
-      const badgeY = node.cy + nameOffset + 29;
-      const countBg = el('rect', {
-        x: node.cx - 14, y: badgeY - 8,
+      const badgeY = nameOff + 29;
+      g.appendChild(el('rect', {
+        x: -14, y: badgeY - 8,
         width: '28', height: '14',
         rx: '7',
         fill: 'rgba(255,255,255,0.05)',
         stroke: 'rgba(255,255,255,0.1)',
         'stroke-width': '0.5',
-      });
-      g.appendChild(countBg);
+      }));
       const countText = el('text', {
-        x: node.cx, y: badgeY + 1,
+        x: 0, y: badgeY + 1,
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
         fill: 'rgba(200,220,255,0.5)',
@@ -648,12 +641,174 @@ function renderGraph() {
       g.appendChild(countText);
     }
 
-    g.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openNodeSheet(node);
-    });
+    // Set initial group position before first tick
+    g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
 
     nodesGroup.appendChild(g);
+    nodeGroupMap[node.id] = g;
+  });
+
+  // ---- D3 simulation ----
+  simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links)
+      .id(d => d.id)
+      .distance(d => {
+        const toCenter = d.source.id === 'tengrand' || d.target.id === 'tengrand';
+        if (!toCenter) return 210;
+        return d.strength === 'strong' ? 162 : d.strength === 'medium' ? 180 : 198;
+      })
+      .strength(0.45)
+    )
+    .force('charge', d3.forceManyBody().strength(-300))
+    .force('collision', d3.forceCollide().radius(d => d.radius + 22).strength(0.85))
+    .alphaDecay(0.013)
+    .velocityDecay(0.45)
+    .on('tick', () => {
+      // Move line endpoints
+      links.forEach(link => {
+        const src = link.source;
+        const tgt = link.target;
+        const key = `${src.id}-${tgt.id}`;
+        const els = lineElMap[key];
+        if (!els) return;
+        els.glowLine.setAttribute('x1', src.x); els.glowLine.setAttribute('y1', src.y);
+        els.glowLine.setAttribute('x2', tgt.x); els.glowLine.setAttribute('y2', tgt.y);
+        els.mainLine.setAttribute('x1', src.x); els.mainLine.setAttribute('y1', src.y);
+        els.mainLine.setAttribute('x2', tgt.x); els.mainLine.setAttribute('y2', tgt.y);
+        els.hitLine.setAttribute('x1', src.x);  els.hitLine.setAttribute('y1', src.y);
+        els.hitLine.setAttribute('x2', tgt.x);  els.hitLine.setAttribute('y2', tgt.y);
+      });
+
+      // Move node groups
+      nodes.forEach(n => {
+        const g = nodeGroupMap[n.id];
+        if (g) g.setAttribute('transform', `translate(${n.x}, ${n.y})`);
+      });
+    });
+
+  // ---- D3 drag — distinguishes tap (open sheet) from drag (move node) ----
+  let dragMoved = false;
+
+  const nodeDrag = d3.drag()
+    .on('start', (event, d) => {
+      dragMoved = false;
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+      nodeGroupMap[d.id].classList.add('is-dragging');
+    })
+    .on('drag', (event, d) => {
+      dragMoved = true;
+      // Convert client pointer → SVG coordinate space → simulation space
+      const svgEl = document.getElementById('graphSvg');
+      const pt = svgEl.createSVGPoint();
+      const src = event.sourceEvent;
+      if (src.touches && src.touches.length > 0) {
+        pt.x = src.touches[0].clientX;
+        pt.y = src.touches[0].clientY;
+      } else {
+        pt.x = src.clientX || 0;
+        pt.y = src.clientY || 0;
+      }
+      const ctm = svgEl.getScreenCTM();
+      if (ctm) {
+        const p = pt.matrixTransform(ctm.inverse());
+        d.fx = (p.x - panX) / currentZoom;
+        d.fy = (p.y - panY) / currentZoom;
+      }
+    })
+    .on('end', (event, d) => {
+      if (!event.active) simulation.alphaTarget(0);
+      nodeGroupMap[d.id].classList.remove('is-dragging');
+      if (d.id !== 'tengrand') {
+        d.fx = null;
+        d.fy = null;
+      }
+      if (!dragMoved) openNodeSheet(d);
+    });
+
+  nodes.forEach(node => {
+    d3.select(nodeGroupMap[node.id]).datum(node).call(nodeDrag);
+  });
+
+  // ---- Periodic gentle float — tiny velocity kicks keep the network alive when idle ----
+  floatTimer = setInterval(() => {
+    if (simulation.alpha() < 0.012) {
+      nodes.forEach(n => {
+        if (n.id === 'tengrand') return;
+        n.vx += (Math.random() - 0.5) * 0.7;
+        n.vy += (Math.random() - 0.5) * 0.7;
+      });
+      simulation.alpha(0.055).restart();
+    }
+  }, 3500);
+
+  // ---- Pan / zoom touch & mouse ----
+  initPanZoom();
+}
+
+function initPanZoom() {
+  const svg = document.getElementById('graphSvg');
+  let isPanning = false;
+  let panSx = 0, panSy = 0;
+  let panOx = 0, panOy = 0;
+  let lastPinchDist = 0;
+
+  svg.addEventListener('touchstart', e => {
+    if (e.target.closest('.node-group')) return;
+    if (e.touches.length === 2) {
+      lastPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    } else if (e.touches.length === 1) {
+      isPanning = true;
+      panSx = e.touches[0].clientX; panSy = e.touches[0].clientY;
+      panOx = panX; panOy = panY;
+    }
+  }, { passive: true });
+
+  svg.addEventListener('touchmove', e => {
+    if (e.target.closest('.node-group') && e.touches.length === 1) return;
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastPinchDist > 0) setZoom(currentZoom * (dist / lastPinchDist));
+      lastPinchDist = dist;
+    } else if (e.touches.length === 1 && isPanning) {
+      panX = panOx + (e.touches[0].clientX - panSx) / currentZoom;
+      panY = panOy + (e.touches[0].clientY - panSy) / currentZoom;
+      applyTransform();
+    }
+  }, { passive: true });
+
+  svg.addEventListener('touchend', () => { isPanning = false; });
+
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    setZoom(currentZoom * (e.deltaY > 0 ? 0.9 : 1.1));
+  }, { passive: false });
+
+  svg.addEventListener('mousedown', e => {
+    if (e.target.closest('.node-group')) return;
+    isPanning = true;
+    panSx = e.clientX; panSy = e.clientY;
+    panOx = panX; panOy = panY;
+    svg.style.cursor = 'grabbing';
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!isPanning) return;
+    panX = panOx + (e.clientX - panSx) / currentZoom;
+    panY = panOy + (e.clientY - panSy) / currentZoom;
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isPanning = false;
+    svg.style.cursor = 'default';
   });
 }
 
@@ -663,11 +818,10 @@ function renderGraph() {
 
 function openNodeSheet(node) {
   const content = document.getElementById('nodeSheetContent');
-  const colorRgb = hexToRgb(node.color) || '79,142,247';
 
   content.innerHTML = `
     <div class="sheet-node-header">
-      <div class="sheet-node-orb" style="background:${node.grad.replace('url(#','').replace(')','') ? nodeGradCSS(node) : node.color}; box-shadow: 0 0 24px ${node.color}60;">
+      <div class="sheet-node-orb" style="background:${nodeGradCSS(node)}; box-shadow: 0 0 24px ${node.color}60;">
         ${node.initials}
       </div>
       <div class="sheet-node-title">
@@ -738,18 +892,6 @@ function closeNodeSheet() {
   document.getElementById('nodeSheetOverlay').classList.remove('active');
 }
 
-function nodeGradCSS(node) {
-  const map = {
-    'url(#grad-gold)': 'linear-gradient(135deg, #ffe066, #f5a623)',
-    'url(#grad-blue)': 'linear-gradient(135deg, #7eb8ff, #4f8ef7)',
-    'url(#grad-purple)': 'linear-gradient(135deg, #c77dff, #a259ff)',
-    'url(#grad-green)': 'linear-gradient(135deg, #6effc2, #22d67f)',
-    'url(#grad-white)': 'linear-gradient(135deg, #ffffff, #c8d8f0)',
-    'url(#grad-cyan)': 'linear-gradient(135deg, #7fffff, #00c8c8)',
-  };
-  return map[node.grad] || node.color;
-}
-
 // ==================
 // RELATIONSHIP SHEET
 // ==================
@@ -817,11 +959,6 @@ function closeRelSheet() {
   document.getElementById('relSheetOverlay').classList.remove('active');
 }
 
-function hexToRgb(hex) {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : null;
-}
-
 // ==================
 // DRAWER
 // ==================
@@ -843,147 +980,35 @@ function closeDrawer() {
 function switchTab(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-
   const screen = document.getElementById(`screen-${screenId}`);
   const tab = document.querySelector(`.nav-tab[data-screen="${screenId}"]`);
-
   if (screen) screen.classList.add('active');
   if (tab) tab.classList.add('active');
 }
 
 // ==================
-// ZOOM
-// ==================
-
-function setZoom(z) {
-  currentZoom = Math.max(0.5, Math.min(2.5, z));
-  applyTransform();
-}
-
-function centerGraph() {
-  currentZoom = 1;
-  panX = 0;
-  panY = 0;
-  applyTransform();
-}
-
-// Pan/zoom state
-let isPanning = false;
-let panStart = { x: 0, y: 0 };
-let panOrigin = { x: 0, y: 0 };
-let lastTouchDist = 0;
-
-// ==================
-// TOUCH/MOUSE INTERACTIONS ON GRAPH
-// ==================
-
-function initGraphInteractions() {
-  const svg = document.getElementById('graphSvg');
-
-  // Touch pinch-to-zoom and pan
-  svg.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-      lastTouchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-    } else if (e.touches.length === 1) {
-      isPanning = true;
-      panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      panOrigin = { x: panX, y: panY };
-    }
-  }, { passive: true });
-
-  svg.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      const delta = dist / lastTouchDist;
-      setZoom(currentZoom * delta);
-      lastTouchDist = dist;
-    } else if (e.touches.length === 1 && isPanning) {
-      const dx = (e.touches[0].clientX - panStart.x) / currentZoom;
-      const dy = (e.touches[0].clientY - panStart.y) / currentZoom;
-      panX = panOrigin.x + dx;
-      panY = panOrigin.y + dy;
-      applyTransform();
-    }
-  }, { passive: true });
-
-  svg.addEventListener('touchend', () => { isPanning = false; });
-
-  // Mouse wheel zoom
-  svg.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(currentZoom * delta);
-  }, { passive: false });
-
-  // Mouse drag pan
-  svg.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.node-group')) return;
-    isPanning = true;
-    panStart = { x: e.clientX, y: e.clientY };
-    panOrigin = { x: panX, y: panY };
-    svg.style.cursor = 'grabbing';
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    const dx = (e.clientX - panStart.x) / currentZoom;
-    const dy = (e.clientY - panStart.y) / currentZoom;
-    panX = panOrigin.x + dx;
-    panY = panOrigin.y + dy;
-    applyTransform();
-  });
-
-  window.addEventListener('mouseup', () => {
-    isPanning = false;
-    svg.style.cursor = 'pointer';
-  });
-}
-
-// ==================
-// EVENT LISTENERS
+// INIT
 // ==================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Stars
   initStars();
-
-  // Graph — compute positions so Ten Grand is at visual center, then render
-  computeNodePositions();
-  renderGraph();
-  applyTransform();
-  initGraphInteractions();
+  initD3Graph();
 
   window.addEventListener('resize', () => {
-    computeNodePositions();
-    renderGraph();
-    applyTransform();
+    initD3Graph();
   });
 
-  // Drawer
   document.getElementById('menuBtn').addEventListener('click', openDrawer);
   document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
-
-  // Sheets
   document.getElementById('nodeSheetOverlay').addEventListener('click', closeNodeSheet);
   document.getElementById('relSheetOverlay').addEventListener('click', closeRelSheet);
 
-  // Bottom nav
   document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      switchTab(tab.dataset.screen);
-    });
+    tab.addEventListener('click', () => switchTab(tab.dataset.screen));
   });
 
-  // Graph search button (switches to search tab)
   document.getElementById('graphSearchBtn').addEventListener('click', () => switchTab('search'));
 
-  // Notification button (placeholder tap)
   document.getElementById('notifBtn').addEventListener('click', () => {
     alert('Notifications coming soon.');
   });

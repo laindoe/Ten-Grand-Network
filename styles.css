@@ -196,6 +196,11 @@ html, body {
 .node-group { cursor: pointer; }
 .node-group:active .node-circle { filter: brightness(1.2); }
 
+/* Drag state — brighten to signal the node is grabbed */
+.node-group.is-dragging {
+  filter: brightness(1.35) drop-shadow(0 0 10px rgba(245,166,35,0.4));
+}
+
 /* ==================
    GRAPH SEARCH BUTTON
    ================== */
