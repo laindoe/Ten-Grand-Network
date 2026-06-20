@@ -283,6 +283,13 @@ function hexToRgb(hex) {
   return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : null;
 }
 
+function getNameLines(name) {
+  const words = name.toUpperCase().split(' ');
+  if (words.length === 1 || name.replace(/\s/g, '').length <= 9) return [name.toUpperCase()];
+  const mid = Math.floor(words.length / 2);
+  return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+}
+
 function nodeGradCSS(node) {
   const map = {
     'url(#grad-gold)':   'linear-gradient(135deg, #ffe066, #f5a623)',
@@ -552,7 +559,7 @@ function initD3Graph() {
       'fill-opacity': '0.12',
     }));
 
-    // Label text
+    // All text lives inside the orb — no floating external labels
     if (node.isCenter) {
       const t1 = el('text', {
         x: 0, y: -6,
@@ -579,66 +586,27 @@ function initD3Graph() {
       g.appendChild(t1);
       g.appendChild(t2);
     } else {
-      const t = el('text', {
-        x: 0, y: 0,
-        'text-anchor': 'middle',
-        'dominant-baseline': 'middle',
-        fill: 'white',
-        'font-size': '12',
-        'font-weight': '800',
-        'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+      const nameLines = getNameLines(node.name);
+      const fontSize = nameLines.length === 1
+        ? (nameLines[0].length <= 6 ? 9 : 8)
+        : (nameLines.some(l => l.length >= 9) ? 7 : 8);
+      const lh = fontSize + 3;
+      const startY = nameLines.length === 1 ? 0 : -(lh / 2);
+      nameLines.forEach((line, i) => {
+        const t = el('text', {
+          x: 0,
+          y: startY + i * lh,
+          'text-anchor': 'middle',
+          'dominant-baseline': 'middle',
+          fill: 'white',
+          'font-size': String(fontSize),
+          'font-weight': '800',
+          'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+          'letter-spacing': '0.5',
+        });
+        t.textContent = line;
+        g.appendChild(t);
       });
-      t.textContent = node.initials;
-      g.appendChild(t);
-    }
-
-    // Name / category labels below node
-    const nameOff = node.radius + 14;
-
-    const nameText = el('text', {
-      x: 0, y: nameOff + (node.isCenter ? 6 : 5),
-      'text-anchor': 'middle',
-      fill: node.isCenter ? node.color : '#e8eeff',
-      'font-size': node.isCenter ? '11' : '9.5',
-      'font-weight': node.isCenter ? '700' : '600',
-      'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
-    });
-    nameText.textContent = node.isCenter ? 'TEN GRAND' : node.name;
-    g.appendChild(nameText);
-
-    const catText = el('text', {
-      x: 0, y: nameOff + (node.isCenter ? 19 : 17),
-      'text-anchor': 'middle',
-      fill: node.isCenter ? 'rgba(255,200,50,0.6)' : 'rgba(180,195,230,0.45)',
-      'font-size': '8',
-      'font-weight': '500',
-      'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
-      'letter-spacing': '0.1',
-    });
-    catText.textContent = node.category.toUpperCase();
-    g.appendChild(catText);
-
-    if (!node.isCenter) {
-      const badgeY = nameOff + 29;
-      g.appendChild(el('rect', {
-        x: -14, y: badgeY - 8,
-        width: '28', height: '14',
-        rx: '7',
-        fill: 'rgba(255,255,255,0.05)',
-        stroke: 'rgba(255,255,255,0.1)',
-        'stroke-width': '0.5',
-      }));
-      const countText = el('text', {
-        x: 0, y: badgeY + 1,
-        'text-anchor': 'middle',
-        'dominant-baseline': 'middle',
-        fill: 'rgba(200,220,255,0.5)',
-        'font-size': '8',
-        'font-weight': '600',
-        'font-family': "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
-      });
-      countText.textContent = node.connections;
-      g.appendChild(countText);
     }
 
     // Set initial group position before first tick
